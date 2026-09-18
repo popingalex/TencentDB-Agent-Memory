@@ -1,0 +1,22 @@
+import { chromium } from 'playwright'
+const K = process.env.K
+const b = await chromium.launch()
+const p = await (await b.newContext({viewport:{width:1400,height:900}})).newPage()
+await p.goto('http://127.0.0.1:8125/', { waitUntil:'networkidle', timeout:30000 })
+await p.waitForTimeout(1500)
+await p.locator('input[placeholder*="user_key"], input[placeholder*="sk-mem"]').first().fill(K)
+await p.locator('button:has-text("Log In")').first().click()
+await p.waitForTimeout(5000)
+const skip = p.locator('button:has-text("Skip")').first()
+if (await skip.count()) { await skip.click(); await p.waitForTimeout(800) }
+await p.locator('text=Wiki Knowledge Base').first().click()
+await p.waitForTimeout(2500)
+await p.locator('text=Team Wiki Pool').first().click()
+await p.waitForTimeout(3000)
+await p.locator('text=dev-1024-kb').first().click()
+await p.waitForTimeout(5000)
+await p.screenshot({path:'/tmp/r5_clean.png'})
+const body = await p.locator('body').innerText()
+console.log('含「示例」:', body.includes('示例'), '| 含「DSH」:', body.includes('DSH'), '| 含「会话」:', body.includes('会话'))
+console.log('含「用户名格式策略」:', body.includes('用户名格式策略'), '| Total Pages:', (body.match(/Total Pages\s*(\d+)/)||[])[1])
+await b.close()
